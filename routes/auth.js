@@ -1,0 +1,14 @@
+module.exports = function( app, passport ) {
+
+    app.get( '/auth/facebook', 
+            passport.authenticate( 'facebook' ));
+
+    app.get( '/auth/facebook/callback', 
+            passport.authenticate( 'facebook', { failureRedirect: '/' }),
+            function( req, res ) {
+                console.log( "SUCCESS" ); 
+                res.redirect( '/' );
+            });
+
+};
+
