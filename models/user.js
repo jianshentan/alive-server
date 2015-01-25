@@ -1,12 +1,12 @@
 var mongoose = require( 'mongoose' ),
     Schema = mongoose.Schema;
 
+var bcrypt = require( 'bcrypt-nodejs' );
+
 var userSchema = new Schema({
     username: { type: String, unique: true, require: true, default: "" },
-    active_room: { type: Schema.ObjectId, ref: 'Room' },
-    facebook_id: { type: String },
-    facebook_token: { type: String },
-    facebook_email: { type: String }
+    password: { type: String, require: true, default: "" },
+    active_room: { type: Schema.ObjectId, ref: 'Room' }
 });
 
 userSchema.path( 'username' ).validate( function( username ) {
@@ -23,5 +23,14 @@ userSchema.path( 'username' ).validate( function( username, cb ) {
         cb( !err && users.length == 0 );
     });
 }, 'username is already in use' );
+
+userSchema.methods.generateHash = function(password) {
+    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+};
+
+// checking if password is valid
+userSchema.methods.validPassword = function(password) {
+    return bcrypt.compareSync(password, this.local.password);
+};
 
 module.exports = mongoose.model( 'User', userSchema );

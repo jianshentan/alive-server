@@ -23,6 +23,15 @@ mongoose.connect( 'mongodb://localhost:27017/alive' );
  app.set('view engine', 'ejs');
 
 /*--------------------- configure app ------------------ */
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
 require('./config/passport')(passport);
 
 // uncomment after placing your favicon in /public
