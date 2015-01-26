@@ -51,11 +51,12 @@ app.use(express.static(path.join(__dirname, 'public')));
                      ROUTES FOR API 
 ======================================================== */
 
-// prefix user-routes with '/api'
+// routing:
 require('./routes/auth')(app, passport); // auth
-app.use('/', require('./routes/index')); 
-app.use('/api', require('./routes/user'));
-app.use('/api', require('./routes/room'));
+require('./routes/api')(app, passport); // api
+app.get('/', function(req, res) {
+  res.render('index', { title: 'Express' });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

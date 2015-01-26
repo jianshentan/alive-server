@@ -1,4 +1,5 @@
 var LocalStrategy = require( 'passport-local' ).Strategy;
+var BearerStrategy = require('passport-http-bearer').Strategy;
 var User = require( '../models/user' );
 var jwt = require( 'jwt-simple' );
 
@@ -33,6 +34,16 @@ module.exports = function( passport ) {
         if (!user.verifyPassword(password)) { return done(null, false); }
         return done(null, user);
       }); 
+    }
+  ));
+
+  passport.use( new BearerStrategy(
+    function(token, done) {
+      User.findOne({ access_token: token }, function (err, user) {
+        if (err) { return done(err); }
+        if (!user) { return done(null, false); }
+        return done(null, user, { scope: 'all' });
+      });
     }
   ));
 
