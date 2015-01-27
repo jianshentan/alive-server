@@ -10,15 +10,15 @@ module.exports = function( passport ) {
       User.findOne({ username: username }, function(err, user) {
         if ( err ) { return done(err); }
         if ( user ) { 
-          return done(null, false);  //username taken
+          return done(null, false );  //username taken
         } else {
           var newUser = new User();
           newUser.username = username;
           newUser.password = newUser.generateHash( password );;
+          newUser.login_dates.push( Date.now() );
 
           newUser.save( function( err ) {
-            if ( err )
-              throw err;
+            if ( err ) throw err;
             return done(null, newUser);
           });
         }
@@ -32,7 +32,13 @@ module.exports = function( passport ) {
         if (err) { return done(err); }
         if (!user) { return done(null, false); }
         if (!user.verifyPassword(password)) { return done(null, false); }
-        return done(null, user);
+
+        user.login_dates.push( Date.now() );
+        user.save( function( err ) {
+          if( err ) throw err;
+          return done(null, user);
+        });
+
       }); 
     }
   ));

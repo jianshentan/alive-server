@@ -54,6 +54,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // routing:
 require('./routes/auth')(app, passport); // auth
 require('./routes/api')(app, passport); // api
+
 app.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });

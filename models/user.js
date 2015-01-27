@@ -7,7 +7,13 @@ var userSchema = new Schema({
   username: { type: String, unique: true, require: true, default: "" },
   password: { type: String, require: true, default: "" },
   access_token: { type: String, default: "" },
-  active_room: { type: Schema.ObjectId, ref: 'Room' }
+  visited_rooms: [{ 
+                  room: { type: Schema.ObjectId, ref: 'Room'},
+                  date: { type: Date, default: Date.now }
+                 }],
+  date_created: { type: Date, default: Date.now },
+  login_dates: [{ type: Date }],
+  phone_number: { type: String }
 });
 
 userSchema.path( 'username' ).validate( function( username ) {
