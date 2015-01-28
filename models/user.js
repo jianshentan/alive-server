@@ -24,13 +24,6 @@ userSchema.path( 'username' ).validate( function( username ) {
   return username.length;
 }, 'username cannot be blank' );
 
-userSchema.path( 'username' ).validate( function( username, cb ) {
-  var User = mongoose.model( 'User' );
-  User.find({ username: username }).exec( function( err, users ) {
-    cb( !err && users.length == 0 );
-  });
-}, 'username is already in use' );
-
 userSchema.methods.generateHash = function(password) {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 };
