@@ -53,7 +53,7 @@ module.exports = function( app, passport ) {
         } else {
           var room = new Room();
           room.name = roomName;
-          room.creator = user._id;
+          room.creator = userId;
           room.save( function( err ) {
             if( err ) throw err;
             res.status(200).json({ message: "OK" });
@@ -66,10 +66,15 @@ module.exports = function( app, passport ) {
   // Search rooms
   app.get( '/search/:query',
     function( req, res ) {
-      console.log( req.params.query );
-      var query = "/"+req.params.query+"/i";
-      Room.find( { name: new RegExp( query ) }, function( err, rooms ) {
-        console.log( rooms ); 
+      var query = req.params.query;
+      Room.find( { name: new RegExp( query, 'i' ) }, function( err, rooms ) {
+        if( err ) throw err;
+        if( !rooms ) {
+          // there are no rooms that satisfy the query
+          res.status(200).send( "" );
+        } else {
+          res.status(200).json( rooms );
+        }
       });
     });
 
