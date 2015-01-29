@@ -7,7 +7,7 @@ module.exports = function( passport ) {
 
   passport.use( 'local-signup', new LocalStrategy(
     function( username, password, done ) {
-      User.findOne({ username: username }, function(err, user) {
+      User.findOne({ username: username }, function( err, user ) {
         if ( err ) { return done(err); }
         if ( user ) { 
           return done(null, false );  //username taken
@@ -28,7 +28,7 @@ module.exports = function( passport ) {
 
   passport.use( 'local-login', new LocalStrategy(
     function( username, password, done ) {
-      User.findOne({ username: username }, function(err, user) {
+      User.findOne({ username: username }, function( err, user ) {
         if (err) { return done(err); }
         if (!user) { return done(null, false); } // no user found
         if (!user.verifyPassword(password)) 
@@ -36,7 +36,7 @@ module.exports = function( passport ) {
 
         user.login_dates.push( Date.now() );
         user.save( function( err ) {
-          if( err ) { console.log( err ); throw err; } // TODO: keeps throwing err
+          if( err ) { console.log( err ); throw err; } 
           return done(null, user);
         });
 
@@ -45,8 +45,8 @@ module.exports = function( passport ) {
   ));
 
   passport.use( new BearerStrategy(
-    function(token, done) {
-      User.findOne({ access_token: token }, function (err, user) {
+    function( token, done ) {
+      User.findOne({ access_token: token }, function( err, user ) {
         if (err) { return done(err); }
         if (!user) { return done(null, false); }
         return done(null, user, { scope: 'all' });

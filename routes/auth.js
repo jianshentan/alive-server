@@ -10,6 +10,7 @@ module.exports = function( app, passport ) {
   app.post( '/signup', 
     passport.authenticate( 'local-signup', { failureRedirect: '/signup/fail' }), 
     function( req, res ) {
+      console.log( req.user );
       var token = jwt.encode( { username: req.body.username }, secret );
       updateAccessToken( { username: req.body.username }, token, res );
     });
@@ -33,7 +34,7 @@ function updateAccessToken( query, token, res ) {
     if( err ) { throw err }
     if( !user ) {
       // ERROR: username can't be found
-      console.log( "ERROR in update DB with new access token" );
+      console.log( "ERROR: user not found by access token" );
       res.sendStatus( 500 );
     } else {
       res.json({ access_token: token });

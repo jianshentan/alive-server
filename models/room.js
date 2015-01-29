@@ -3,8 +3,12 @@ var mongoose = require( 'mongoose' ),
 
 var roomSchema = new Schema({
     name: { type: String, unique: true, require: true, default: "" },
+    creator: { type: Schema.ObjectId, ref: 'User' },
     active: { type: Boolean, default: false },
-    users: [{ type: Schema.ObjectId, ref: 'User' }]
+    users: [{ 
+            user: { type: Schema.ObjectId, ref: 'User' },
+            date: { type: Date, default: Date.now }
+           }]
 });
 
 roomSchema.path( 'name' ).validate( function( name ) {
@@ -14,17 +18,5 @@ roomSchema.path( 'name' ).validate( function( name ) {
 roomSchema.path( 'name' ).validate( function( name ) {
     return !name.length <= 3;
 }, 'name is too short' );
-
-roomSchema.path( 'name' ).validate( function( name ) {
-    return !name.length > 15;
-}, 'name is too long' );
-
-roomSchema.path( 'name' ).validate( function( name, cb ) {
-    var Room = mongoose.model( 'Room' );
-    Room.find({ name: name }).exec( function( err, rooms ) {
-        cb( !err && rooms.length == 0 );
-    });
-}, 'name is already in use' );
-
 
 module.exports = mongoose.model( 'Room', roomSchema );
