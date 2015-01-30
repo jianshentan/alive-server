@@ -4,7 +4,7 @@ var mongoose = require( 'mongoose' ),
 var roomSchema = new Schema({
     name: { type: String, unique: true, require: true, default: "" },
     creator: { type: Schema.ObjectId, ref: 'User' },
-    active: { type: Boolean, default: false },
+    active: { type: Boolean, default: true },
     users: [{ 
             user: { type: Schema.ObjectId, ref: 'User' },
             date: { type: Date, default: Date.now }

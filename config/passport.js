@@ -2,6 +2,7 @@ var LocalStrategy = require( 'passport-local' ).Strategy;
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var User = require( '../models/user' );
 var jwt = require( 'jwt-simple' );
+var secret = require( '../config/secret' ).app_secret;
 
 module.exports = function( passport ) {
 
@@ -16,6 +17,7 @@ module.exports = function( passport ) {
           newUser.username = username;
           newUser.password = newUser.generateHash( password );;
           newUser.login_dates.push( Date.now() );
+          newUser.access_token = jwt.encode( { username: username }, secret );
 
           newUser.save( function( err ) {
             if ( err ) throw err;
@@ -34,9 +36,11 @@ module.exports = function( passport ) {
         if (!user.verifyPassword(password)) 
           return done(null, false);  // invalid password
 
+        // recreate access_token again
+        user.access_token = jwt.encode( { username: username }, secret );
         user.login_dates.push( Date.now() );
         user.save( function( err ) {
-          if( err ) { console.log( err ); throw err; } 
+          if( err ) { throw err; } 
           return done(null, user);
         });
 
