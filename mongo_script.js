@@ -85,8 +85,4 @@ db.once( 'open', function callback() {
     });
   });
   
-
-  // FINISHED - exiting
-  console.log( "finished! exiting..." );
-  process.exit(code=0);
 });
