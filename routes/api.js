@@ -7,6 +7,7 @@ var Util = require( '../util' );
 module.exports = function( app, passport ) {
 
   // Get all users
+  // TODO: passing entire user object, INCLUDING (hashed) PASSWORD
   app.get( '/users',
     passport.authenticate( 'bearer', { session: false } ),
     function( req, res ) {
@@ -28,6 +29,7 @@ module.exports = function( app, passport ) {
   
 
   // Get user // for now, return same data for all users, including self
+  // TODO: passing entire user object, INCLUDING (hashed) PASSWORD
   app.get( '/user/:username',
     passport.authenticate( 'bearer', { session: false } ),
     function( req, res ) {

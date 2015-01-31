@@ -17,7 +17,9 @@ module.exports = function( passport ) {
           newUser.username = username;
           newUser.password = newUser.generateHash( password );;
           newUser.login_dates.push( Date.now() );
-          newUser.access_token = jwt.encode( { username: username }, secret );
+
+          var package = { username: username, timestamp: Date.now() };
+          newUser.access_token = jwt.encode( package, secret );
 
           newUser.save( function( err ) {
             if ( err ) throw err;
@@ -37,7 +39,8 @@ module.exports = function( passport ) {
           return done(null, false);  // invalid password
 
         // recreate access_token again
-        user.access_token = jwt.encode( { username: username }, secret );
+        var package = { username: username, timestamp: Date.now() };
+        user.access_token = jwt.encode( package, secret );
         user.login_dates.push( Date.now() );
         user.save( function( err ) {
           if( err ) { throw err; } 
