@@ -3,6 +3,7 @@ var User = require( '../models/user' );
 var Room = require( '../models/room' );
 var jwt = require( 'jwt-simple' );
 var Util = require( '../util' );
+var Socket = require( '../sockets/base' );
 
 module.exports = function( app, passport ) {
 
@@ -73,8 +74,9 @@ module.exports = function( app, passport ) {
           var room = new Room();
           room.name = roomName;
           room.creator = userId;
-          room.save( function( err ) {
+          room.save( function( err, room ) {
             if( err ) throw err;
+            Socket.addRoom( room._id );
             res.json( Util.buildResponse( true, "", {} ) );  
           });
         }

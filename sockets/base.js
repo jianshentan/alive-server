@@ -1,40 +1,50 @@
-/* ========================================================
-                         SOCKETS 
-======================================================== */
-module.exports = function(io) {
+var Room = require( '../models/room' );
+var rooms = {}; 
+
+exports.addRoom = function( roomId ) {
+  rooms[ roomId ] = [];
+};
+
+exports.start = function(io) {
   
-  /*
-  { <roomId>: [<users], ... }
-  */
-  var rooms = {};
+  // TODO: consider redis, ram problems...
+  
+  Room.find( {}, function( err, data ) {
+    if( err ) throw err;
+    for( var i in data ) {
+      rooms[ data[i]._id ] = [];
+    }
+  });
 
   io.on( 'connection', function( socket ) { 
+    var userId = null;
 
-    console.log( "connection made" );
+    socket.on( 'enter', function( data ) {
+      var roomId = data.room;
+      userId = data.user;
 
-    socket.on( 'enter', function( package ) {
-      var roomId = package.room;
-      var userId = package.user;
+      // check that users joins a room (and doesnt make one up)
+      if( rooms[ roomId ] != null ) {
+        socket.join( roomId );
 
-      //console.log( userId + " joined room " + roomId );
-      socket.join( roomId );
+        updateRoom( roomId, userId );
 
-      if( !rooms[ roomId ] ) {
-        rooms[ roomId ] = [ userId ];
-      } else {
-        rooms[ roomId ].push( userId );
+        if( !rooms[ roomId ] ) {
+          rooms[ roomId ] = [ userId ];
+        } else {
+          rooms[ roomId ].push( userId );
+        }
+
+        io.to( roomId ).emit( 'user joined', userId );
+        io.to( roomId ).emit( 'user list', rooms[ roomId ] );
       }
-
-      io.to( roomId ).emit( 'user joined', userId );
-      io.to( roomId ).emit( 'user list', rooms[ roomId ] );
     });
 
-    socket.on( 'leave', function( package ) {
-      var roomId = package.room;
-      var userId = package.user;
+    socket.on( 'leave', function( data ) {
+      var roomId = data.room;
+      //var userId = data.user;
 
       socket.leave( roomId );
-      //console.log( userId + " left " + roomId );
 
       if( inArray( userId, rooms[ roomId ] ) ) {
         var userIndex = rooms[ roomId ].indexOf( userId );
@@ -46,8 +56,19 @@ module.exports = function(io) {
     });
     
   });
-
 }
+
+function updateRoom( roomId, userId ) {
+  // update room in db
+  Room.findById( roomId, function( err, room ) {
+    if( err ) throw err;
+    // TODO: check that userId is valid before putting it in db
+    room.users.push( { user: userId, date: Date.now() } );
+    room.save( function( err ){
+      if( err ) throw err;
+    });
+  });
+};
 
 function inArray( item, array ) {
   var inArray = false;
@@ -57,5 +78,6 @@ function inArray( item, array ) {
     }
   }
   return inArray;
-
 };
+
+
