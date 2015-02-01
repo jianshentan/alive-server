@@ -3,10 +3,60 @@
   <head>
   </head>
   <body>
-    hello
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    username: <span id="username"></span>
+    <div class="emit-btn" onclick="emit()">EMIT</div>
+    <div class="room1" onclick="joinRoom(1)">JOIN (room1)</div>
+    <div class="room2" onclick="joinRoom(2)">JOIN (room2)</div>
+    <div class="room1" onclick="leaveRoom(1)">EXIT (room1)</div>
+    <div class="room1" onclick="leaveRoom(2)">EXIT (room2)</div>
+
+    <hr>
+    LOG: 
+    <div class="user_log"></div> 
+    <hr>
+    USER LIST IN CURRENT ROOM: 
+    <div class="user_list"></div>
+
     <script>
+      var userId = null;
+      getRandomInt( 1, 100, function( id ) {
+        $( "#username" ).html( id );
+        userId = id;
+      });
+      function getRandomInt(min, max, cb) {
+        var id = Math.floor(Math.random() * (max - min)) + min;
+        cb( id );
+      }     
+
       var socket = io();
+ 
+      function joinRoom( room ) {
+        socket.emit( 'enter', { room: room, user: userId } );
+      };
+      function leaveRoom( room ) {
+        socket.emit( 'leave', { room: room, user: userId } );
+      }
+
+      socket.on( 'user joined', function( user ) {
+        $( ".user_log" ).append( "<div>"+user+" joined</div>" );
+      });
+
+      socket.on( 'user left', function( user ) {
+        $( ".user_log" ).append( "<div>"+user+" left</div>" );
+      });
+
+      socket.on( 'user list', function( users ) {
+        $( ".user_list" ).html( "" );
+        for( var i in users ) {
+          $( ".user_list" ).append( "<div>"+users[i]+"</div>" );
+        }
+      });
     </script>
+
+
+
   </body>
 </html>
