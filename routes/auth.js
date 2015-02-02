@@ -11,8 +11,11 @@ module.exports = function( app, passport ) {
   app.post( '/signup', 
     passport.authenticate( 'local-signup', { failureRedirect: '/signup/fail' } ), 
     function( req, res ) {
-      res.json( 
-        Util.buildResponse( true, "", { access_token: req.user.access_token } ) );
+      var package = {
+        access_token: req.user.access_token,
+        user_id: req.user._id
+      }
+      res.json( Util.buildResponse( true, "", package ) );
     });
 
   // redirect if login fails
@@ -24,8 +27,11 @@ module.exports = function( app, passport ) {
   app.post( '/login', 
     passport.authenticate( 'local-login', { failureRedirect: '/login/fail' } ), 
     function( req, res ) {
-      res.json( 
-        Util.buildResponse( true, "", { access_token: req.user.access_token } ) );
+      var package = {
+        access_token: req.user.access_token,
+        user_id: req.user._id
+      }
+      res.json( Util.buildResponse( true, "", package ) );
     });
 
 };

@@ -5,6 +5,17 @@ var User = require( '../models/user' );
 var rooms = {}; 
 var redisClient = redis.createClient(); // can specify ( post, host )
 
+/* ===========================================================
+
+REDIS client structure
+
+(unique) 'rooms': SORTED SET <room_id>, represents all rooms
+'room:'<room_id>: SORTED SET <user_id>, represents all users in the room
+(unique) 'users': SORTED SET <user_id>, represents all connected users
+'user:'<user_id>: STRING of stringified user data
+
+=========================================================== */
+
 redisClient.on( 'connect', function() {
   console.log( "redis db connected" );
 });
@@ -15,29 +26,68 @@ exports.start = function(io) {
     var userId = null;
 
     socket.on( 'enter', function( data ) {
+      userId = data.user; 
+
+      // add data to redis client 'users' key
+      redisClient.zadd([ 'users', Date.now(), userId ], 
+        function( err, reply ) {
+          if( err ) throw err; 
+        });
+
+      // add user data to redis clients 'user:<id>' key via mongo
+      User.findById( userId, function( err, user ) {
+        if( err ) throw err;
+        if( !user ) {
+          console.log( "ERROR: invalid user opened a socket" );
+          return;
+        }
+        redisClient.set([ 'user:'+userId, JSON.stringify( user ) ],
+          function( err, reply ) {
+            if( err ) throw err; 
+          });
+      });
+    });
+
+    socket.on( 'disconnect', function() {
+      // remove user in redis client from 'users' key
+      redisClient.zrem([ 'users', userId ], 
+        function( err, reply ) {
+          if( err ) throw err;
+        });
+
+      // remove user key:value pair from redis client
+      redisClient.del([ 'user:' +userId ], 
+        function( err, reply ) {
+          if( err ) throw err; 
+        });
+    });
+
+    socket.on( 'join', function( data ) {
       var roomId = data.room;
-      userId = data.user;
 
       // check that users joins a room (and doesnt make one up)
       redisClient.zrank([ 'rooms', roomId ], function( err, reply ) {
         if( err ) throw err;
 
-        // if room exists, reply will be an integer between [0, infinity]
+        // if roomId is valid/exists, reply will be an integer between [0, infinity]
         if( !isInteger( reply ) ) {
-          console.log( "ERROR: room id is not available on redis" );
-          throw err;
+          io.to( socket.id ).emit( 'error', { message: 'roomId was not valid' } );
+          return;
         }
  
         socket.join( roomId );
 
-        // add user to room in mongodb
+        // MONGO UPDATE: add user to room in mongodb
         updateRoomEntry( roomId, userId );
-        // add user to room in redis
-        redisClient.zadd([ roomId, Date.now(), userId ], function(){} );
-
-        io.to( roomId ).emit( 'user joined', userId );
-        // TODO: emit list of users in room to current socket client
-        // io.to( roomId ).emit( 'user list', user._id ); 
+        // add user_id to 'room:<room_id>' in redis client
+        redisClient.zadd([ "room:"+roomId, Date.now(), userId ], 
+          function( err, reply ){
+            if( err ) throw err;
+            
+            io.to( roomId ).emit( 'user joined', userId );
+            io.to( socket.id ).emit( 'user list', user._id );
+          });
+ 
       });
     });
 
@@ -47,9 +97,11 @@ exports.start = function(io) {
       socket.leave( roomId );
 
       // remove user from room in redis
-      redisClient.zrem([ roomId, userId ], function( err, reply ) {
-        io.to( roomId ).emit( 'user left', userId );
-      });
+      redisClient.zrem([ "room:"+roomId, userId ], 
+        function( err, reply ) {
+          if( err ) throw err;
+          io.to( roomId ).emit( 'user left', userId );
+        });
 
     });
     

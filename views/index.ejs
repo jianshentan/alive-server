@@ -39,8 +39,12 @@
 
       var socket = io();
  
+      function openConnection() {
+        socket.emit( 'enter', { user: userId } );
+      }
+
       function joinRoom( room ) {
-        socket.emit( 'enter', { room: room, user: userId } );
+        socket.emit( 'join', { room: room } );
       };
       function leaveRoom( room ) {
         socket.emit( 'leave', { room: room } );
