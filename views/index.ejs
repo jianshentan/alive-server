@@ -8,9 +8,9 @@
 
     username: <span id="username"></span>
     <div class="emit-btn" onclick="emit()">EMIT</div>
-    <div class="room1" onclick="joinRoom('54cae79e46ceb4d5a1227df9')">JOIN (room1)</div>
+    <div class="room1" onclick="joinRoom('54cf1dbf8059607b599050c4')">JOIN (room1)</div>
     <div class="room2" onclick="joinRoom(2)">JOIN (room2)</div>
-    <div class="room1" onclick="leaveRoom('54cae79e46ceb4d5a1227df9')">EXIT (room1)</div>
+    <div class="room1" onclick="leaveRoom('54cf1dbf8059607b599050c4')">EXIT (room1)</div>
     <div class="room1" onclick="leaveRoom(2)">EXIT (room2)</div>
 
     <hr>
@@ -21,11 +21,17 @@
     <div class="user_list"></div>
 
     <script>
-      var userId = null; //"54cae79e46ceb4d5a1227df5";
+      var js = "54cf1dbf8059607b599050c0";
+      var minsoo = "54cf1dbf8059607b599050c1";
+      var pete = "54cf1dbf8059607b599050c2";
+      var userId = minsoo;
+      $( "#username" ).html( userId );
+/*
       getRandomInt( 1, 100, function( id ) {
         $( "#username" ).html( id );
         userId = id;
       });
+*/
       function getRandomInt(min, max, cb) {
         var id = Math.floor(Math.random() * (max - min)) + min;
         cb( id );
@@ -37,7 +43,7 @@
         socket.emit( 'enter', { room: room, user: userId } );
       };
       function leaveRoom( room ) {
-        socket.emit( 'leave', { room: room, user: userId } );
+        socket.emit( 'leave', { room: room } );
       }
 
       socket.on( 'user joined', function( user ) {
