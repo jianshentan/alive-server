@@ -1,4 +1,5 @@
-var redis = require('redis');
+var async = require( 'async' );
+var redis = require( 'redis' );
 var Room = require( '../models/room' );
 var User = require( '../models/user' );
 
@@ -49,6 +50,7 @@ exports.start = function(io) {
     });
 
     socket.on( 'disconnect', function() {
+      console.log( "user " + userId + " disconnected" );
       // remove user in redis client from 'users' key
       redisClient.zrem([ 'users', userId ], 
         function( err, reply ) {
@@ -66,28 +68,56 @@ exports.start = function(io) {
       var roomId = data.room;
 
       // check that users joins a room (and doesnt make one up)
-      redisClient.zrank([ 'rooms', roomId ], function( err, reply ) {
-        if( err ) throw err;
+      redisClient.zrank([ 'rooms', roomId ], 
+        function( err, reply ) { 
+          if( err ) throw err;
 
-        // if roomId is valid/exists, reply will be an integer between [0, infinity]
-        if( !isInteger( reply ) ) {
-          io.to( socket.id ).emit( 'error', { message: 'roomId was not valid' } );
-          return;
-        }
- 
-        socket.join( roomId );
+          // if roomId exists, reply will be an integer between [0, infinity]
+          if( !isInteger( reply ) ) {
+            io.to( socket.id ).emit( 'error', { message: 'roomId was not valid' } );
+            return;
+          }
+   
+          socket.join( roomId );
 
-        // MONGO UPDATE: add user to room in mongodb
-        updateRoomEntry( roomId, userId );
-        // add user_id to 'room:<room_id>' in redis client
-        redisClient.zadd([ "room:"+roomId, Date.now(), userId ], 
-          function( err, reply ){
-            if( err ) throw err;
-            
-            io.to( roomId ).emit( 'user joined', userId );
-            io.to( socket.id ).emit( 'user list', user._id );
-          });
- 
+          // MONGO UPDATE: add user to room in mongodb
+          updateRoomEntry( roomId, userId );
+
+          // add user_id to 'room:<room_id>' in redis client
+          redisClient.zadd([ "room:"+roomId, Date.now(), userId ], 
+            function( err, reply1 ){
+              if( err ) throw err;
+            });
+
+          // get user data from 'user:<user_id>' key in redis client
+          redisClient.get([ "user:"+userId ], 
+            function( err, reply1 ) {
+              if( err ) throw err;
+              io.to( roomId ).emit( 'user joined', JSON.parse( reply1 ) );
+            });
+
+          // get users from 'room:<room_id>' key in redis client 
+          // TODO: includes YOU - needs to not
+          redisClient.zrangebyscore( "room:"+roomId, '-inf', '+inf', 
+            function( err, reply1 ) {
+              if( err ) throw err;
+
+              async.map( reply1, 
+                function( item, cb ){
+                  redisClient.get([ "user:"+item ],
+                    function( err, reply2 ) {
+                      if( err ) throw err;
+                      if( !reply2 ) {
+                        cb( "no users" );
+                      } 
+                      cb( null, JSON.parse( reply2 ) );
+                    });
+                }, 
+                function( err, result ){
+                  if( err ) throw err ;
+                  io.to( socket.id ).emit( 'user list', result );   
+                });
+            });
       });
     });
 
@@ -110,7 +140,10 @@ exports.start = function(io) {
 
 exports.addRoom = function( roomId ) {
   var score = Date.now();
-  redisClient.zadd([ 'rooms', score, roomId ]);
+  redisClient.zadd([ 'rooms', score, roomId ], 
+    function( err, reply ) {
+      if( err ) throw err;
+    });
 };
 
 function updateRoomEntry( roomId, userId ) {
