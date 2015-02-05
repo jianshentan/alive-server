@@ -8,9 +8,9 @@
 
     username: <span id="username"></span>
     <div class="emit-btn" onclick="emit()">EMIT</div>
-    <div class="room1" onclick="joinRoom('54d12a92470a91b3f8f511f1')">JOIN (room1)</div>
+    <div class="room1" onclick="joinRoom('54d1b11df515f3b44f6cd13e')">JOIN (room1)</div>
     <div class="room2" onclick="joinRoom(2)">JOIN (room2)</div>
-    <div class="room1" onclick="leaveRoom('54d12a92470a91b3f8f511f1')">EXIT (room1)</div>
+    <div class="room1" onclick="leaveRoom('54d1b11df515f3b44f6cd13e')">EXIT (room1)</div>
     <div class="room1" onclick="leaveRoom(2)">EXIT (room2)</div>
 
     <hr>
@@ -21,21 +21,11 @@
     <div class="user_list"></div>
 
     <script>
-      var js = "54d10aace2743aedf3d43781";
-      var minsoo = "54d10aace2743aedf3d43782";
-      var pete = "54d10aace2743aedf3d43783";
-      var userId = minsoo;
+      var js = "54d1b11cf515f3b44f6cd13a";
+      var minsoo = "54d1b11df515f3b44f6cd13b";
+      var pete = "54d1b11cf515f3b44f6cd13c";
+      var userId = js;
       $( "#username" ).html( userId );
-/*
-      getRandomInt( 1, 100, function( id ) {
-        $( "#username" ).html( id );
-        userId = id;
-      });
-*/
-      function getRandomInt(min, max, cb) {
-        var id = Math.floor(Math.random() * (max - min)) + min;
-        cb( id );
-      }     
 
       var socket = io();
  
@@ -67,8 +57,6 @@
         }
       });
     </script>
-
-
 
   </body>
 </html>

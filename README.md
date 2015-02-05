@@ -8,7 +8,7 @@
 ## Run Application Instructions
 1. cd into directory
 2. start mongodb: type 'mongod'
-3. start redis: inside redis, type 'src/redis-server'
+3. start redis: inside redis, type 'redis-server'
 4. type "npm install"
 5. type "nodemon bin/www"
 6. (optional) run 'mongo_script.js' for dev

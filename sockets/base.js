@@ -39,6 +39,7 @@ exports.start = function(io) {
       User.findById( userId, function( err, user ) {
         if( err ) throw err;
         if( !user ) {
+          // TODO handle this differently / better
           console.log( "ERROR: invalid user opened a socket" );
           return;
         }
@@ -50,7 +51,6 @@ exports.start = function(io) {
     });
 
     socket.on( 'disconnect', function() {
-      console.log( "user " + userId + " disconnected" );
       // remove user in redis client from 'users' key
       redisClient.zrem([ 'users', userId ], 
         function( err, reply ) {
@@ -74,7 +74,8 @@ exports.start = function(io) {
 
           // if roomId exists, reply will be an integer between [0, infinity]
           if( !isInteger( reply ) ) {
-            io.to( socket.id ).emit( 'error', { message: 'roomId was not valid' } );
+            console.log( "Invalid roomId" );
+            io.to( socket.id ).emit( 'error', { message: 'invalid roomId' } );
             return;
           }
    
@@ -97,24 +98,31 @@ exports.start = function(io) {
             });
 
           // get users from 'room:<room_id>' key in redis client 
-          // TODO: includes YOU - needs to not
           redisClient.zrangebyscore( "room:"+roomId, '-inf', '+inf', 
             function( err, reply1 ) {
               if( err ) throw err;
-
+              
               async.map( reply1, 
                 function( item, cb ){
-                  redisClient.get([ "user:"+item ],
-                    function( err, reply2 ) {
-                      if( err ) throw err;
-                      if( !reply2 ) {
-                        cb( "no users" );
-                      } 
-                      cb( null, JSON.parse( reply2 ) );
-                    });
+                  if( item != userId ) {
+                    console.log( item );
+                    redisClient.get([ "user:"+item ],
+                      function( err, reply2 ) {
+                        console.log("REPLY:"+ reply2 );
+                        if( err ) throw err;
+                        if( !reply2 ) {
+                          cb( "ERROR: no user here" );
+                        } 
+                        cb( null, JSON.parse( reply2 ) );
+                      });
+                  }
                 }, 
                 function( err, result ){
-                  if( err ) throw err ;
+                  if( err ) {
+                    console.log( err );
+                    throw err;
+                  };
+                  console.log( result );
                   io.to( socket.id ).emit( 'user list', result );   
                 });
             });
