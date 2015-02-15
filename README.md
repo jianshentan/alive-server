@@ -12,3 +12,5 @@
 4. type "npm install"
 5. type "nodemon bin/www"
 6. (optional) run 'mongo_script.js' for dev
+7. (optional) run 'redis-cli' for redis shell editor
+8. (optional) run 'mongod' for mongo shell editor

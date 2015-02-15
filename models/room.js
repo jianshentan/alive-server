@@ -8,7 +8,11 @@ var roomSchema = new Schema({
   users: [{ 
            user: { type: Schema.ObjectId, ref: 'User' },
            date: { type: Date, default: Date.now }
-         }]
+         }],
+  guests: [{ 
+            guest: { type: String, require: true },
+            date: { type: Date, default: Date.now }
+          }] 
 });
 
 roomSchema.path( 'name' ).validate( function( name ) {

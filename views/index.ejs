@@ -19,13 +19,24 @@
     <hr>
     USER LIST IN CURRENT ROOM: 
     <div class="user_list"></div>
+    <hr>
+    GUEST LIST IN CURRENT ROOM: 
+    <div class="guest_list"></div>
+
 
     <script>
       var js = "54d1b11cf515f3b44f6cd13a";
       var minsoo = "54d1b11df515f3b44f6cd13b";
       var pete = "54d1b11cf515f3b44f6cd13c";
-      var userId = js;
-      $( "#username" ).html( userId );
+
+      var guest = confirm( "are you a guest" );
+      if( guest ) {
+        var userId = Math.floor(( Math.random() * 100 ) + 1 );;
+        $( "#username" ).html( "guest" + userId );
+      } else {
+        var userId = minsoo;
+        $( "#username" ).html( userId );
+      }
 
       var socket = io();
  
@@ -35,25 +46,47 @@
       }
 
       function joinRoom( room ) {
-        socket.emit( 'join', { room: room } );
+        if( guest ) { 
+          socket.emit( 'guest join', { room: room } );
+        } else {
+          socket.emit( 'join', { room: room } );
+        }
       };
       function leaveRoom( room ) {
-        socket.emit( 'leave', { room: room } );
+        if( guest ) {
+          socket.emit( 'guest leave', { room: room } );
+        } else {
+          socket.emit( 'leave', { room: room } );
+        }
       }
 
       socket.on( 'user joined', function( user ) {
-        $( ".user_log" ).append( "<div>"+user+" joined</div>" );
+        if( user ) 
+          $( ".user_log" ).append( "<div>"+user._id+" joined</div>" );
+      });
+
+      socket.on( 'guest joined', function( guest ) {
+        $( ".user_log" ).append( "<div>"+guest+" joined</div>" );
       });
 
       socket.on( 'user left', function( user ) {
-        $( ".user_log" ).append( "<div>"+user+" left</div>" );
+        if( user ) 
+          $( ".user_log" ).append( "<div>"+user.id+" left</div>" );
         $( ".user_list" ).html( "" );
       });
 
-      socket.on( 'user list', function( users ) {
+      socket.on( 'guest left', function( guest ) {
+        $( ".user_log" ).append( "<div>"+guest+" left</div>" );
         $( ".user_list" ).html( "" );
-        for( var i in users ) {
-          $( ".user_list" ).append( "<div>"+users[i]+"</div>" );
+      });
+
+      socket.on( 'user list', function( data ) {
+        $( ".user_list" ).html( "" );
+        for( var i in data.users ) {
+          $( ".user_list" ).append( "<div>"+data.users[i]._id+"</div>" );
+        }
+        for( var i in data.guests) {
+          $( ".guest_list" ).append( "<div>"+data.guests[i]+"</div>" );
         }
       });
     </script>

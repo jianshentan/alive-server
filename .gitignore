@@ -4,3 +4,4 @@ node_modules
 *swp
 npm-debug.log
 config/secret.js
+dump.rdb
