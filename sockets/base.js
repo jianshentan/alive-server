@@ -94,12 +94,35 @@ exports.start = function(io) {
         function( err, reply ) { 
           if( err ) throw err;
 
+          // new ------------------------------------------
+          
+          if( !isInteger( reply ) ) {
+            // fall back to mongo 
+            console.log("room not found on redis");
+            Room.findById(roomId, function(err, room){
+                if( err ) throw err;
+
+                // room has been found
+                if( !room ){
+                    io.to( socket.id ).emit( 'error', { message: 'invalid roomId' } );
+                    return;
+                }
+                
+                // room found on db--add it to redis, add users recorded on db
+
+            });
+          } 
+
+          // old ------------------------------------------
+
           // if roomId exists, reply will be an integer between [0, infinity]
           if( !isInteger( reply ) ) {
             console.log( "Invalid roomId" );
             io.to( socket.id ).emit( 'error', { message: 'invalid roomId' } );
             return;
           }
+
+          // old ------------------------------------------
    
           socket.join( roomId );
 
