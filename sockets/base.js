@@ -30,6 +30,7 @@ exports.start = function(io) {
   io.on( 'connection', function( socket ) { 
     var userId = null;
     var guest = false;
+    var roomId = null;
 
     socket.on( 'enter', function( data ) {
       userId = data.user; 
@@ -71,6 +72,13 @@ exports.start = function(io) {
           function( err, reply ) {
             if( err ) throw err;
           });
+
+        // remove guest_user from <guest_room:room_id> in redis
+        redisClient.srem([ "guest_room:"+roomId, userId ],
+          function( err, reply ) {
+            if( err ) throw err;
+            io.to( roomId ).emit( 'guest left', userId ); 
+          });
       } else {
         // remove user in redis client from 'users' key
         redisClient.zrem([ 'users', userId ], 
@@ -83,11 +91,18 @@ exports.start = function(io) {
           function( err, reply ) {
             if( err ) throw err; 
           });
+
+        // remove user from <room:room_id> in redis
+        redisClient.zrem([ "room:"+roomId, userId ], 
+          function( err, reply ) {
+            if( err ) throw err;
+            io.to( roomId ).emit( 'user left', userId );
+          });
       }
     });
 
     socket.on( 'join', function( data ) {
-      var roomId = data.room;
+      roomId = data.room;
 
       // check that users joins a room (and doesnt make one up)
       redisClient.zrank([ 'rooms', roomId ], 
@@ -126,7 +141,7 @@ exports.start = function(io) {
     });
 
     socket.on( 'guest join', function( data ) {
-      var roomId = data.room;
+      roomId = data.room;
 
       // check that users joins a room (and doesnt make one up)
       redisClient.zrank([ 'rooms', roomId ], 
@@ -161,7 +176,6 @@ exports.start = function(io) {
     });
 
     socket.on( 'leave', function( data ) {
-      var roomId = data.room;
       socket.leave( roomId );
 
       // remove user from <room:room_id> in redis
@@ -173,7 +187,6 @@ exports.start = function(io) {
     });
 
     socket.on( 'guest leave', function( data ) {
-      var roomId = data.room;
       socket.leave( roomId );
 
       // remove guest_user from <guest_room:room_id> in redis

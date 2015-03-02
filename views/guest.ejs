@@ -6,13 +6,12 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
+    IM A GUEST! <br>
+
+    <%= room.name %> <br>
+    
     username: <span id="username"></span>
     <div class="emit-btn" onclick="emit()">EMIT</div>
-    <div class="room1" onclick="joinRoom('54f39dfadb9912fa398abea8')">JOIN (room1)</div>
-    <div class="room2" onclick="joinRoom('54f39dfadb9912fa398abea7')">JOIN (room2)</div>
-    <div class="room1" onclick="leaveRoom('54f39dfadb9912fa398abea8')">EXIT (room1)</div>
-    <div class="room1" onclick="leaveRoom('54f39dfadb9912fa398abea7')">EXIT (room2)</div>
-
     <hr>
     LOG: 
     <div class="user_log"></div> 
@@ -23,40 +22,14 @@
     GUEST LIST IN CURRENT ROOM: 
     <div class="guest_list"></div>
 
-
     <script>
-      var js = "54f39df9db9912fa398abea3";
-      var minsoo = "54f39df9db9912fa398abea4";
-
-      var guest = confirm( "are you a guest" );
-      if( guest ) {
-        var userId = Math.floor(( Math.random() * 100 ) + 1 );;
-        $( "#username" ).html( "guest" + userId );
-      } else {
-        var userId = minsoo;
-        $( "#username" ).html( userId );
-      }
+      var roomId = "<%= room._id %>";
 
       var socket = io();
- 
       openConnection();
       function openConnection() {
-        socket.emit( 'enter', { user: userId } );
-      }
-
-      function joinRoom( room ) {
-        if( guest ) { 
-          socket.emit( 'guest join', { room: room } );
-        } else {
-          socket.emit( 'join', { room: room } );
-        }
-      };
-      function leaveRoom( room ) {
-        if( guest ) {
-          socket.emit( 'guest leave', { room: room } );
-        } else {
-          socket.emit( 'leave', { room: room } );
-        }
+        socket.emit( 'enter', { user: "guest" } );
+        socket.emit( 'guest join', { room: roomId } );
       }
 
       socket.on( 'user joined', function( user ) {
@@ -92,3 +65,5 @@
 
   </body>
 </html>
+
+

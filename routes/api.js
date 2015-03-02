@@ -60,6 +60,21 @@ module.exports = function( app, passport ) {
       });
     });
 
+  // used to find room by guest user
+  app.get( '/visit_room/:name',
+    function( req, res ) {
+      var room = req.params.name;
+      Room.findOne( { name: room }, function( err, room ) {
+        if( err) throw err;
+        room.guests.push( { guest: req.ip, date: Date.now() } );
+        room.save( function( err ) {
+          if( err ) throw err;
+          res.render( 'guest', { room: room } );
+          //res.json( Util.buildResponse( true, "", { room: room } ) );
+        });
+      });
+    });
+
   // Post new room
   app.post( '/room',
     passport.authenticate( 'bearer', { session: false } ),
