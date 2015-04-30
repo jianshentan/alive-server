@@ -84,7 +84,7 @@ module.exports = function( app, passport ) {
       Room.findOne({ name: roomName }, function( err, room ) {
         if( err ) { throw err }
         if( room ) { 
-          res.json( Util.buildResponse( false, "room name is token", {} ) );
+          res.json( Util.buildResponse( false, "room name is taken", {} ) );
         } else {
           var room = new Room();
           room.name = roomName;

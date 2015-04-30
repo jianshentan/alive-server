@@ -4,6 +4,7 @@ var Room = require( './models/room' );
 var jwt = require( 'jwt-simple' );
 var secret = require( './config/secret' ).app_secret;
 var bcrypt = require( 'bcrypt-nodejs' );
+var Socket = require( 'sockets/base' );
 
 mongoose.connect( 'mongodb://localhost/alive' );
 var db = mongoose.connection;
@@ -82,6 +83,7 @@ db.once( 'open', function callback() {
   dummyRooms.forEach( function( dummyRoom ) {
     dummyRoom.save( function( err, room ) {
       if( err ) throw err;
+      Socket.addRoom( room._id );
       console.log( room.name + " saved" );
     });
   });
